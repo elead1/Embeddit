@@ -35,7 +35,14 @@ async def scrape(ctx, url: str):
 
 
 def parse_comment(url: str, url_parts: re.Match) -> Embed:
-    with urllib.request.urlopen(url) as response:
+    req = urllib.request.Request(
+        url,
+        data=None,
+        headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+        }
+    )
+    with urllib.request.urlopen(req) as response:
         contents = response.read()
     soup = bs4.BeautifulSoup(contents, 'html.parser')
     comment_div_id = "thing_t1_{}".format(url_parts.group('comment_id'))
@@ -43,9 +50,8 @@ def parse_comment(url: str, url_parts: re.Match) -> Embed:
     content = comment.find("form").find("div").find("div", class_="md").contents[0]
     emb = Embed(title="Embeddit")
     # emb.set_thumbnail(url=bot.user.avatar_url)
-    emb.add_field(name="Comment", value=content)  # TODO: improve content formatting; markdownify should do this
-    emb.add_field(name="Subreddit", value=url_parts.group('subreddit'))
-    emb.set_footer(text="[Link to thread]({})".format(url))
+    emb.add_field(name="Comment", value=md(str(content)))
+    emb.add_field(name="Link", value="[Link to thread]({})".format(url))
     return emb
 
 
